@@ -29,10 +29,9 @@
 #include <stdbool.h>
 #include "FreeRTOS.h"
 #include "timers.h"
-#include "debug.h"
 #include "cfassert.h"
-#include "param.h"
 #include "static_mem.h"
+#include "xil_printf.h"
 
 #include "sysload.h"
 
@@ -98,15 +97,15 @@ static void timerHandler(xTimerHandle timer) {
     // CPU usage is since last dump in % compared to total time spent in tasks. Note that time spent in interrupts will be included in measured time.
     // Stack usage is displayed as nr of unused bytes at peak stack usage.
 
-    DEBUG_PRINT("Task dump\n");
-    DEBUG_PRINT("Load\tStack left\tName\n");
+    xil_printf("Task dump\n");
+    xil_printf("Load\tStack left\tName\n");
     for (uint32_t i = 0; i < taskCount; i++) {
       TaskStatus_t* stats = &taskStats[i];
       taskData_t* previousTaskData = getPreviousTaskData(stats->xTaskNumber);
 
       uint32_t taskRunTime = stats->ulRunTimeCounter;
       float load = f * (taskRunTime - previousTaskData->ulRunTimeCounter);
-      DEBUG_PRINT("%.2f \t%u \t%s\n", (double)load, stats->usStackHighWaterMark, stats->pcTaskName);
+      xil_printf("%.2f \t%u \t%s\n", (double)load, stats->usStackHighWaterMark, stats->pcTaskName);
 
       previousTaskData->ulRunTimeCounter = taskRunTime;
     }
@@ -116,13 +115,3 @@ static void timerHandler(xTimerHandle timer) {
     triggerDump = 0;
   }
 }
-
-
-PARAM_GROUP_START(system)
-
-/**
- * @brief Set to nonzero to dump CPU and stack usage to console
- */
-PARAM_ADD_CORE(PARAM_UINT8, taskDump, &triggerDump)
-
-PARAM_GROUP_STOP(system)

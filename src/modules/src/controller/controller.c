@@ -1,12 +1,13 @@
 #define DEBUG_MODULE "CONTROLLER"
-#include "debug.h"
 
+#include "config.h"
 #include "cfassert.h"
 #include "controller.h"
 #include "controller_pid.h"
 #include "controller_mellinger.h"
 #include "controller_indi.h"
 #include "controller_brescianini.h"
+#include "xil_printf.h"
 
 #include "autoconf.h"
 
@@ -59,13 +60,13 @@ void controllerInit(ControllerType controller) {
 
   ControllerType forcedController = CONTROLLER;
   if (forcedController != ControllerTypeAutoSelect) {
-    DEBUG_PRINT("Controller type forced\n");
+    xil_printf("Controller type forced\n");
     currentController = forcedController;
   }
 
   initController();
 
-  DEBUG_PRINT("Using %s (%d) controller\n", controllerGetName(), currentController);
+  xil_printf("Using %s (%d) controller\r\n", controllerGetName(), currentController);
 }
 
 ControllerType controllerGetType(void) {

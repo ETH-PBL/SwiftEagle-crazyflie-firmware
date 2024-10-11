@@ -25,8 +25,6 @@
  * estimator_complementary.c - a complementary estimator
  */
 
-#include "stm32f4xx.h"
-
 #include "FreeRTOS.h"
 #include "queue.h"
 
@@ -34,7 +32,7 @@
 #include "estimator_complementary.h"
 #include "sensfusion6.h"
 #include "position_estimator.h"
-#include "sensors.h"
+// #include "sensors.h"
 #include "stabilizer_types.h"
 #include "static_mem.h"
 

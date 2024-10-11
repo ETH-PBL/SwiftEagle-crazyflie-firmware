@@ -28,8 +28,6 @@
 
 #include "kalman_supervisor.h"
 
-#include "param.h"
-
 // The bounds on states, these shouldn't be hit...
 float maxPosition = 100; //meters
 float maxVelocity = 10; //meters per second
@@ -55,16 +53,3 @@ bool kalmanSupervisorIsStateWithinBounds(const kalmanCoreData_t* this) {
 
   return true;
 }
-
-PARAM_GROUP_START(kalman)
-/**
- * @brief Maximum accepted coordinate before kalman supervisor
- * resets estimator
- */
-  PARAM_ADD_CORE(PARAM_FLOAT, maxPos, &maxPosition)
-  /**
- * @brief Maximum accepted velocity before kalman supervisor
- * resets estimator
- */
-  PARAM_ADD_CORE(PARAM_FLOAT, maxVel, &maxVelocity)
-PARAM_GROUP_STOP(kalman)

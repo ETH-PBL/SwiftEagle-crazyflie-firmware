@@ -41,10 +41,6 @@
 
 #ifndef CONFIG_H_
 #define CONFIG_H_
-#include "nrf24l01.h"
-
-#include "trace.h"
-#include "usec_time.h"
 
 #define PROTOCOL_VERSION 5
 
@@ -55,17 +51,15 @@
   #define FREERTOS_HEAP_SIZE      30000
 #endif
 #define FREERTOS_MIN_STACK_SIZE 150       // M4-FPU register setup is bigger so stack needs to be bigger
-#define FREERTOS_MCU_CLOCK_HZ   168000000
 
-#define configGENERATE_RUN_TIME_STATS 1
-#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() usecTimerInit()
-#define portGET_RUN_TIME_COUNTER_VALUE() usecTimestamp()
+#define CRAZYFLIE_FW
 
 
 // Task priorities. Higher number higher priority
 #define PASSTHROUGH_TASK_PRI    5
 #define STABILIZER_TASK_PRI     5
 #define SENSORS_TASK_PRI        4
+#define RAWRECORDING_TASK_PRI   3
 #define ADC_TASK_PRI            3
 #define FLOW_TASK_PRI           3
 #define MULTIRANGER_TASK_PRI    3
@@ -75,6 +69,7 @@
 #define EXTRX_TASK_PRI          2
 #define ZRANGER_TASK_PRI        2
 #define ZRANGER2_TASK_PRI       2
+#define IPI_TASK_PRI            2
 #define LOG_TASK_PRI            1
 #define MEM_TASK_PRI            1
 #define PARAM_TASK_PRI          1
@@ -121,8 +116,10 @@
 #define LOG_TASK_NAME           "LOG"
 #define MEM_TASK_NAME           "MEM"
 #define PARAM_TASK_NAME         "PARAM"
+#define IPI_TASK_NAME           "IPI"
 #define SENSORS_TASK_NAME       "SENSORS"
 #define STABILIZER_TASK_NAME    "STABILIZER"
+#define RAWRECORDING_TASK_NAME  "RAWRECORDING"
 #define NRF24LINK_TASK_NAME     "NRF24LINK"
 #define ESKYLINK_TASK_NAME      "ESKYLINK"
 #define SYSLINK_TASK_NAME       "SYSLINK"
@@ -173,8 +170,10 @@
 #define LOG_TASK_STACKSIZE            (2 * configMINIMAL_STACK_SIZE)
 #define MEM_TASK_STACKSIZE            (2 * configMINIMAL_STACK_SIZE)
 #define PARAM_TASK_STACKSIZE          (2 * configMINIMAL_STACK_SIZE)
+#define IPI_TASK_STACKSIZE            configMINIMAL_STACK_SIZE
 #define SENSORS_TASK_STACKSIZE        (2 * configMINIMAL_STACK_SIZE)
 #define STABILIZER_TASK_STACKSIZE     (3 * configMINIMAL_STACK_SIZE)
+#define RAWRECORDING_TASK_STACKSIZE   (3 * configMINIMAL_STACK_SIZE)
 #define NRF24LINK_TASK_STACKSIZE      configMINIMAL_STACK_SIZE
 #define ESKYLINK_TASK_STACKSIZE       configMINIMAL_STACK_SIZE
 #define SYSLINK_TASK_STACKSIZE        (2 * configMINIMAL_STACK_SIZE)

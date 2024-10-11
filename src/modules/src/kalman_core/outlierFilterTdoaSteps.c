@@ -27,8 +27,6 @@
 #include <math.h>
 #include "outlierFilterTdoaSteps.h"
 #include "stabilizer_types.h"
-#include "log.h"
-#include "debug.h"
 
 
 static bool isDistanceDiffSmallerThanDistanceBetweenAnchors(const tdoaMeasurement_t* tdoa);
@@ -144,13 +142,3 @@ static int updateBuckets(float errorDistance) {
 
   return filterIndex;
 }
-
-LOG_GROUP_START(outlierf)
-  LOG_ADD(LOG_INT32, bucket0, &filterLevels[0].bucket)
-  LOG_ADD(LOG_INT32, bucket1, &filterLevels[1].bucket)
-  LOG_ADD(LOG_INT32, bucket2, &filterLevels[2].bucket)
-  LOG_ADD(LOG_INT32, bucket3, &filterLevels[3].bucket)
-  LOG_ADD(LOG_INT32, bucket4, &filterLevels[4].bucket)
-  LOG_ADD(LOG_FLOAT, accLev, &acceptanceLevel)
-  LOG_ADD(LOG_FLOAT, errD, &errorDistance)
-LOG_GROUP_STOP(outlierf)

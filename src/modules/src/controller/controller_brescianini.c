@@ -33,8 +33,6 @@
  */
 
 #include "controller_brescianini.h"
-#include "log.h"
-#include "param.h"
 #include "num.h"
 #include "math3d.h"
 #include "physicalConstants.h"
@@ -404,22 +402,3 @@ void controllerBrescianini(control_t *control,
 bool controllerBrescianiniTest(void) {
   return true;
 }
-
-
-PARAM_GROUP_START(ctrlAtt)
-PARAM_ADD(PARAM_FLOAT, tau_xy, &tau_xy)
-PARAM_ADD(PARAM_FLOAT, zeta_xy, &zeta_xy)
-PARAM_ADD(PARAM_FLOAT, tau_z, &tau_z)
-PARAM_ADD(PARAM_FLOAT, zeta_z, &zeta_z)
-PARAM_ADD(PARAM_FLOAT, tau_rp, &tau_rp)
-PARAM_ADD(PARAM_FLOAT, mixing_factor, &mixing_factor)
-PARAM_ADD(PARAM_FLOAT, coll_fairness, &thrust_reduction_fairness)
-// PARAM_ADD(PARAM_FLOAT, heuristic_rp, &heuristic_rp)
-// PARAM_ADD(PARAM_FLOAT, heuristic_yaw, &heuristic_yaw)
-// PARAM_ADD(PARAM_FLOAT, tau_rp_rate, &tau_rp_rate)
-// PARAM_ADD(PARAM_FLOAT, tau_yaw_rate, &tau_yaw_rate)
-// PARAM_ADD(PARAM_FLOAT, coll_min, &coll_min)
-// PARAM_ADD(PARAM_FLOAT, coll_max, &coll_max)
-// PARAM_ADD(PARAM_FLOAT, omega_rp_max, &omega_rp_max)
-// PARAM_ADD(PARAM_FLOAT, omega_yaw_max, &omega_yaw_max)
-PARAM_GROUP_STOP(ctrlAtt)

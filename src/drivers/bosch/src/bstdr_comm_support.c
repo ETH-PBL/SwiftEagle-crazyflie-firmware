@@ -82,13 +82,13 @@
 
 #include "bstdr_comm_support.h"
 
-#include "stm32fxxx.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#include "sleep.h"
 
 // TA: Maybe not so good to bring in these dependencies...
-#include "debug.h"
-#include "eprintf.h"
+//#include "debug.h"
+//#include "eprintf.h"
 #include "i2cdev.h"
 
 
@@ -158,6 +158,5 @@ bstdr_ret_t bstdr_burst_write(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_dat
 void bstdr_ms_delay(uint32_t period)
 {
 	/**< Delay code comes */
-	vTaskDelay(M2T(period)); // Delay a while to let the device stabilize
+	usleep(period*1000); // Delay a while to let the device stabilize
 }
-

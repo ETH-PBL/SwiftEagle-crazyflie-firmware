@@ -27,8 +27,6 @@
 #include "power_distribution.h"
 
 #include <string.h>
-#include "log.h"
-#include "param.h"
 #include "num.h"
 #include "autoconf.h"
 #include "config.h"
@@ -161,34 +159,3 @@ void powerDistributionCap(const motors_thrust_uncapped_t* motorThrustBatCompUnca
     motorPwm->list[motorIndex] = capMinThrust(thrustCappedUpper, idleThrust);
   }
 }
-
-/**
- * Power distribution parameters
- */
-PARAM_GROUP_START(powerDist)
-/**
- * @brief Motor thrust to set at idle (default: 0)
- *
- * This is often needed for brushless motors as
- * it takes time to start up the motor. Then a
- * common value is between 3000 - 6000.
- */
-PARAM_ADD_CORE(PARAM_UINT32 | PARAM_PERSISTENT, idleThrust, &idleThrust)
-PARAM_GROUP_STOP(powerDist)
-
-/**
- * System identification parameters for quad rotor
- */
-PARAM_GROUP_START(quadSysId)
-
-PARAM_ADD(PARAM_FLOAT, thrustToTorque, &thrustToTorque)
-PARAM_ADD(PARAM_FLOAT, pwmToThrustA, &pwmToThrustA)
-PARAM_ADD(PARAM_FLOAT, pwmToThrustB, &pwmToThrustB)
-
-/**
- * @brief Length of arms (m)
- *
- * The distance from the center to a motor
- */
-PARAM_ADD(PARAM_FLOAT, armLength, &armLength)
-PARAM_GROUP_STOP(quadSysId)

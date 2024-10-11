@@ -64,5 +64,12 @@ void stabilizerResetEmergencyStop();
  */
 void stabilizerSetEmergencyStopTimeout(int timeout);
 
+/**
+ * Get estimator state data
+ *
+ * @param state pointer
+ */
+void getEstimatorState(state_t *state);
+
 
 #endif /* STABILIZER_H_ */

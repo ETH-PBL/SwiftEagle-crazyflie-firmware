@@ -1,11 +1,12 @@
 #ifndef I2C_H
 #define I2C_H
 
+#include <stdbool.h>
+
 #include "FreeRTOS.h"
 #include "semphr.h"
+#include "xscugic.h"
 #include "queue.h"
-/* ST includes */
-#include "stm32fxxx.h"
 
 #define I2C_NO_INTERNAL_ADDRESS   0xFFFF
 
@@ -40,27 +41,7 @@ typedef struct _I2cMessage
 
 typedef struct
 {
-  I2C_TypeDef*        i2cPort;
-  uint32_t            i2cPerif;
-  uint32_t            i2cEVIRQn;
-  uint32_t            i2cERIRQn;
-  uint32_t            i2cClockSpeed;
-  uint32_t            gpioSCLPerif;
-  GPIO_TypeDef*       gpioSCLPort;
-  uint32_t            gpioSCLPin;
-  uint32_t            gpioSCLPinSource;
-  uint32_t            gpioSDAPerif;
-  GPIO_TypeDef*       gpioSDAPort;
-  uint32_t            gpioSDAPin;
-  uint32_t            gpioSDAPinSource;
-  uint32_t            gpioAF;
-  uint32_t            dmaPerif;
-  uint32_t            dmaChannel;
-  DMA_Stream_TypeDef* dmaRxStream;
-  uint32_t            dmaRxIRQ;
-  uint32_t            dmaRxTCFlag;
-  uint32_t            dmaRxTEFlag;
-
+  uint32_t            i2cDevice;
 } I2cDef;
 
 typedef struct
@@ -73,7 +54,6 @@ typedef struct
   StaticSemaphore_t isBusFreeSemaphoreBuffer;
   SemaphoreHandle_t isBusFreeMutex;     //< Mutex to protect bus
   StaticSemaphore_t isBusFreeMutexBuffer;
-  DMA_InitTypeDef DMAStruct;            //< DMA configuration structure used during transfer setup.
 } I2cDrv;
 
 // Definitions of i2c busses found in c file.
@@ -83,7 +63,7 @@ extern I2cDrv sensorsBus;
 /**
  * Initialize i2c peripheral as defined by static I2cDef structs.
  */
-void i2cdrvInit(I2cDrv* i2c);
+int32_t i2cdrvInit(I2cDrv* i2c);
 
 /**
  * Send or receive a message over the I2C bus.
@@ -131,5 +111,8 @@ void i2cdrvCreateMessageIntAddr(I2cMessage *message,
                              I2cDirection  direction,
                              uint32_t length,
                              const uint8_t  *buffer);
+
+//enable the interrupt controller form FreeRTOSconfig
+int32_t i2cdrvInterruptInit(XScuGic *pInterruptController);
 
 #endif

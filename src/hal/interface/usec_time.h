@@ -28,7 +28,7 @@
 #include <stdint.h>
 
 /**
- * Initialize microsecond-resolution timer (TIM1).
+ * Initialize microsecond-resolution timer.
  */
 void usecTimerInit(void);
 

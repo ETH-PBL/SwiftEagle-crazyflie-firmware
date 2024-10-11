@@ -1,38 +1,28 @@
-# Crazyflie Firmware  [![CI](https://github.com/bitcraze/crazyflie-firmware/workflows/CI/badge.svg)](https://github.com/bitcraze/crazyflie-firmware/actions?query=workflow%3ACI)
+## Toolchain
 
-This project contains the source code for the firmware used in the Crazyflie range of platforms, including the Crazyflie 2.X and the Roadrunner.
+- Ubuntu 22.04.2 LTS
+- Vitis v2024.1 (no SDT flow)
+- custom drone hardware rev.5
 
-### Crazyflie 1.0 support
+## Build code
 
-The 2017.06 release was the last release with Crazyflie 1.0 support. If you want
-to play with the Crazyflie 1.0 and modify the code, please clone this repo and
-branch off from the 2017.06 tag.
+1. The repository contains git submodules (FreeRTOS-Kernel). To populate them use:
 
-## Building and Flashing
-See the [building and flashing instructions](https://github.com/bitcraze/crazyflie-firmware/blob/master/docs/building-and-flashing/build.md) in the github docs folder.
+```
+git submodule init
+git submodule update
+```
 
+2. Generate bsp
 
-## Official Documentation
+```
+cd src
+make bsp
+```
+and manually set definition `FF_USE_FIND` to `1` in `xilffs_v5_2/src/include/ffconf.h`.
 
-Check out the [Bitcraze crazyflie-firmware documentation](https://www.bitcraze.io/documentation/repository/crazyflie-firmware/master/) on our website.
-
-## Generated documentation
-
-The easiest way to generate the API documentation is to use the [toolbelt](https://github.com/bitcraze/toolbelt)
-
-```tb build-docs```
-
-and to view it in a web page
-
-```tb docs```
-
-## Contribute
-Go to the [contribute page](https://www.bitcraze.io/contribute/) on our website to learn more.
-
-### Test code for contribution
-
-To run the tests please have a look at the [unit test documentation](https://www.bitcraze.io/documentation/repository/crazyflie-firmware/master/development/unit_testing/).
-
-## License
-
-The code is licensed under LGPL-3.0
+3. Build application
+```
+cd src
+make clean all
+```

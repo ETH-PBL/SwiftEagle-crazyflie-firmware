@@ -25,11 +25,9 @@
  */
 
 #include "mem.h"
+#include "xil_printf.h"
 
 #include "cfassert.h"
-#include "debug.h"
-#include "log.h"
-#include "param.h"
 
 #define MEM_TESTER_SIZE            0x1000
 
@@ -218,7 +216,7 @@ static bool handleMemTesterWrite(const uint32_t memAddr, const uint8_t writeLen,
     if (actualData != expectedData) {
       // Log first error
       if (memTesterWriteErrorCount == 0) {
-        DEBUG_PRINT("Verification failed: expected: %d, actual: %d, addr: %lu\n", expectedData, actualData, addr);
+        xil_printf("Verification failed: expected: %d, actual: %d, addr: %lu\n", expectedData, actualData, addr);
       }
 
       memTesterWriteErrorCount++;
@@ -228,11 +226,3 @@ static bool handleMemTesterWrite(const uint32_t memAddr, const uint8_t writeLen,
 
   return true;
 }
-
-PARAM_GROUP_START(memTst)
-  PARAM_ADD(PARAM_UINT8, resetW, &memTesterWriteReset)
-PARAM_GROUP_STOP(memTst)
-
-LOG_GROUP_START(memTst)
-  LOG_ADD(LOG_UINT32, errCntW, &memTesterWriteErrorCount)
-LOG_GROUP_STOP(memTst)

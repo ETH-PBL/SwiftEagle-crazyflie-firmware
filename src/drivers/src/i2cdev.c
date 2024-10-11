@@ -36,8 +36,8 @@
 
 #include "i2cdev.h"
 #include "i2c_drv.h"
-#include "nvicconf.h"
-#include "debug.h"
+//#include "nvicconf.h"
+//#include "debug.h"
 
 int i2cdevInit(I2C_Dev *dev)
 {

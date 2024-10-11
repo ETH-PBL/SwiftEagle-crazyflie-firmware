@@ -26,8 +26,6 @@
 #include <math.h>
 
 #include "sensfusion6.h"
-#include "log.h"
-#include "param.h"
 #include "physicalConstants.h"
 
 #include "autoconf.h"
@@ -315,70 +313,3 @@ static void estimatedGravityDirection(float* gx, float* gy, float* gz)
  * The sensfusion6 module uses an 3 axis accelerometer and a 3 axis gyro to get
  * accurate attitude measurements.
  */
-LOG_GROUP_START(sensfusion6)
-/**
- * @brief W quaternion
- */
-  LOG_ADD(LOG_FLOAT, qw, &qw)
-/**
- * @brief X quaternion
- */
-  LOG_ADD(LOG_FLOAT, qx, &qx)
-/**
- * @brief y quaternion
- */
-  LOG_ADD(LOG_FLOAT, qy, &qy)
-/**
- * @brief z quaternion
- */
-  LOG_ADD(LOG_FLOAT, qz, &qz)
-/**
- * @brief Gravity vector X
- */
-  LOG_ADD(LOG_FLOAT, gravityX, &gravX)
-/**
- * @brief Gravity vector Y
- */
-  LOG_ADD(LOG_FLOAT, gravityY, &gravY)
-/**
- * @brief Gravity vector Z
- */
-  LOG_ADD(LOG_FLOAT, gravityZ, &gravZ)
-/**
- * @brief Gravity scale factor after calibration
- */
-  LOG_ADD(LOG_FLOAT, accZbase, &baseZacc)
-/**
- * @brief Nonzero if complimentary filter been initialized
- */
-  LOG_ADD(LOG_UINT8, isInit, &isInit)
-/**
- * @brief Nonzero if gravity scale been calibrated
- */
-  LOG_ADD(LOG_UINT8, isCalibrated, &isCalibrated)
-LOG_GROUP_STOP(sensfusion6)
-
-/**
- * Sensor fusion is the process of combining sensory data or data derived from
- * disparate sources such that the resulting information has less uncertainty
- * than would be possible when these sources were used individually.
- *
- * The sensfusion6 module uses an 3 axis accelerometer and a 3 axis gyro to get
- * accurate attitude measurements.
- */
-PARAM_GROUP_START(sensfusion6)
-#ifdef CONFIG_IMU_MADGWICK_QUATERNION
-PARAM_ADD(PARAM_FLOAT, beta, &beta)
-#else // MAHONY_QUATERNION_IMU
-/**
- * @brief Integral gain (default: 0.002)
- */
-PARAM_ADD_CORE(PARAM_FLOAT | PARAM_PERSISTENT, kp, &twoKp)
-
-/**
- * @brief Propotional gain (default: 0.8)
- */
-PARAM_ADD_CORE(PARAM_FLOAT | PARAM_PERSISTENT, ki, &twoKi)
-#endif
-PARAM_ADD(PARAM_FLOAT, baseZacc, &baseZacc)
-PARAM_GROUP_STOP(sensfusion6)

@@ -27,8 +27,6 @@
 #include <math.h>
 #include "outlierFilterLighthouse.h"
 #include "stabilizer_types.h"
-#include "log.h"
-#include "debug.h"
 
 
 #define LH_MS_PER_FRAME (1000 / 120)

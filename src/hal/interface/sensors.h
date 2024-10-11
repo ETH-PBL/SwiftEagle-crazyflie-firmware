@@ -33,14 +33,14 @@ typedef enum { ACC_MODE_PROPTEST, ACC_MODE_FLIGHT } accModes;
 void sensorsInit(void);
 bool sensorsTest(void);
 bool sensorsAreCalibrated(void);
-
+void data_ready_callback(void);
 /**
  * More extensive test of the sensors
  */
 bool sensorsManufacturingTest(void);
 
 // For legacy control
-void sensorsAcquire(sensorData_t *sensors, const uint32_t tick);
+void sensorsAcquire(sensorData_t *sensors);
 
 /**
  * This function should block and unlock at 1KhZ

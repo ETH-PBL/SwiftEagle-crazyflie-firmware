@@ -44,15 +44,15 @@
     #include "platform_defaults_flapper.h"
 #endif
 
-// IMU alignment on the airframe 
+// IMU alignment on the airframe (Euler Angles, Degree, drone hw rev.5)
 #ifndef IMU_PHI
     #define IMU_PHI     0.0f
 #endif
 #ifndef IMU_THETA
-    #define IMU_THETA   0.0f
+    #define IMU_THETA   -90.0f
 #endif
 #ifndef IMU_PSI
-    #define IMU_PSI     0.0f
+    #define IMU_PSI     180.0f
 #endif
 
 // Attitude PID control filter settings
@@ -60,7 +60,7 @@
     #define ATTITUDE_LPF_CUTOFF_FREQ      15.0f
 #endif
 #ifndef ATTITUDE_LPF_ENABLE
-    #define ATTITUDE_LPF_ENABLE false
+    #define ATTITUDE_LPF_ENABLE true //false
 #endif
 #ifndef ATTITUDE_ROLL_RATE_LPF_CUTOFF_FREQ
     #define ATTITUDE_ROLL_RATE_LPF_CUTOFF_FREQ 30.0f
@@ -72,7 +72,7 @@
     #define ATTITUDE_YAW_RATE_LPF_CUTOFF_FREQ 30.0f
 #endif
 #ifndef ATTITUDE_RATE_LPF_ENABLE
-    #define ATTITUDE_RATE_LPF_ENABLE false
+    #define ATTITUDE_RATE_LPF_ENABLE true //false
 #endif
 #ifndef ATTITUDE_RATE_FF_YAW
     #define ATTITUDE_RATE_FF_YAW 0.0f

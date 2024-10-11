@@ -1,19 +1,18 @@
-#include "stm32fxxx.h"
+#include "xpseudo_asm_gcc.h"
+#include "xreg_cortexr5.h"
+
 #include "FreeRTOS.h"
 #include "queue.h"
 #include "static_mem.h"
+#include "xil_printf.h"
 
 #define DEBUG_MODULE "ESTIMATOR"
-#include "debug.h"
 
 #include "cfassert.h"
 #include "estimator.h"
 #include "estimator_complementary.h"
 #include "estimator_kalman.h"
 #include "estimator_ukf.h"
-#include "log.h"
-#include "statsCnt.h"
-#include "eventtrigger.h"
 #include "quatcompress.h"
 
 #define DEFAULT_ESTIMATOR StateEstimatorTypeComplementary
@@ -23,25 +22,6 @@ static StateEstimatorType currentEstimator = StateEstimatorTypeAutoSelect;
 #define MEASUREMENTS_QUEUE_SIZE (20)
 static xQueueHandle measurementsQueue;
 STATIC_MEM_QUEUE_ALLOC(measurementsQueue, MEASUREMENTS_QUEUE_SIZE, sizeof(measurement_t));
-
-// Statistics
-#define ONE_SECOND 1000
-static STATS_CNT_RATE_DEFINE(measurementAppendedCounter, ONE_SECOND);
-static STATS_CNT_RATE_DEFINE(measurementNotAppendedCounter, ONE_SECOND);
-
-// events
-EVENTTRIGGER(estTDOA, uint8, idA, uint8, idB, float, distanceDiff)
-EVENTTRIGGER(estPosition, uint8, source)
-EVENTTRIGGER(estPose)
-EVENTTRIGGER(estDistance, uint8, id, float, distance)
-EVENTTRIGGER(estTOF)
-EVENTTRIGGER(estAbsoluteHeight)
-EVENTTRIGGER(estFlow)
-EVENTTRIGGER(estYawError, float, yawError)
-EVENTTRIGGER(estSweepAngle, uint8, sensorId, uint8, baseStationId, uint8, sweepId, float, t, float, sweepAngle)
-EVENTTRIGGER(estGyroscope)
-EVENTTRIGGER(estAcceleration)
-EVENTTRIGGER(estBarometer)
 
 static void initEstimator(const StateEstimatorType estimator);
 static void deinitEstimator(const StateEstimatorType estimator);
@@ -128,7 +108,7 @@ void stateEstimatorSwitchTo(StateEstimatorType estimator) {
 
   StateEstimatorType forcedEstimator = ESTIMATOR;
   if (forcedEstimator != StateEstimatorTypeAutoSelect) {
-    DEBUG_PRINT("Estimator type forced\n");
+    xil_printf("Estimator type forced\n");
     newEstimator = forcedEstimator;
   }
 
@@ -137,7 +117,7 @@ void stateEstimatorSwitchTo(StateEstimatorType estimator) {
   currentEstimator = newEstimator;
   deinitEstimator(previousEstimator);
 
-  DEBUG_PRINT("Using %s (%d) estimator\n", stateEstimatorGetName(), currentEstimator);
+  xil_printf("\r\nUsing %s (%d) estimator\r\n", stateEstimatorGetName(), currentEstimator);
 }
 
 StateEstimatorType stateEstimatorGetType(void) {
@@ -175,7 +155,9 @@ void estimatorEnqueue(const measurement_t *measurement) {
   }
 
   portBASE_TYPE result;
-  bool isInInterrupt = (SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) != 0;
+
+  u32 cpsr_mode = mfcpsr() & XREG_CPSR_MODE_BITS;
+  bool isInInterrupt = (cpsr_mode == XREG_CPSR_IRQ_MODE) || (cpsr_mode == XREG_CPSR_FIQ_MODE);
   if (isInInterrupt) {
     portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
     result = xQueueSendFromISR(measurementsQueue, measurement, &xHigherPriorityTaskWoken);
@@ -185,81 +167,8 @@ void estimatorEnqueue(const measurement_t *measurement) {
   } else {
     result = xQueueSend(measurementsQueue, measurement, 0);
   }
-
-  if (result == pdTRUE) {
-    STATS_CNT_RATE_EVENT(&measurementAppendedCounter);
-  } else {
-    STATS_CNT_RATE_EVENT(&measurementNotAppendedCounter);
-  }
-
-  // events
-  switch (measurement->type) {
-    case MeasurementTypeTDOA:
-      eventTrigger_estTDOA_payload.idA = measurement->data.tdoa.anchorIds[0];
-      eventTrigger_estTDOA_payload.idB = measurement->data.tdoa.anchorIds[1];
-      eventTrigger_estTDOA_payload.distanceDiff = measurement->data.tdoa.distanceDiff;
-      eventTrigger(&eventTrigger_estTDOA);
-      break;
-    case MeasurementTypePosition:
-      // for additional data, see locSrv.{x,y,z} and lighthouse.{x,y,z}
-      eventTrigger_estPosition_payload.source = measurement->data.position.source;
-      eventTrigger(&eventTrigger_estPosition);
-      break;
-    case MeasurementTypePose:
-      // no payload needed, see locSrv.{x,y,z,qx,qy,qz,qw}
-      eventTrigger(&eventTrigger_estPose);
-      break;
-    case MeasurementTypeDistance:
-      eventTrigger_estDistance_payload.id = measurement->data.distance.anchorId;
-      eventTrigger_estDistance_payload.distance = measurement->data.distance.distance;
-      eventTrigger(&eventTrigger_estDistance);
-      break;
-    case MeasurementTypeTOF:
-      // no payload needed, see range.zrange
-      eventTrigger(&eventTrigger_estTOF);
-      break;
-    case MeasurementTypeAbsoluteHeight:
-      // no payload needed, see CONFIG_DECK_LOCO_2D_POSITION
-      eventTrigger(&eventTrigger_estAbsoluteHeight);
-      break;
-    case MeasurementTypeFlow:
-      // no payload needed, see motion.{deltaX,deltaY}
-      eventTrigger(&eventTrigger_estFlow);
-      break;
-    case MeasurementTypeYawError:
-      eventTrigger_estYawError_payload.yawError = measurement->data.yawError.yawError;
-      eventTrigger(&eventTrigger_estYawError);
-      break;
-    case MeasurementTypeSweepAngle:
-      eventTrigger_estSweepAngle_payload.sensorId = measurement->data.sweepAngle.sensorId;
-      eventTrigger_estSweepAngle_payload.baseStationId = measurement->data.sweepAngle.baseStationId;
-      eventTrigger_estSweepAngle_payload.sweepId = measurement->data.sweepAngle.sweepId;
-      eventTrigger_estSweepAngle_payload.t = measurement->data.sweepAngle.t;
-      eventTrigger_estSweepAngle_payload.sweepAngle = measurement->data.sweepAngle.measuredSweepAngle;
-      eventTrigger(&eventTrigger_estSweepAngle);
-      break;
-    case MeasurementTypeGyroscope:
-      // no payload needed, see gyro.{x,y,z}
-      eventTrigger(&eventTrigger_estGyroscope);
-      break;
-    case MeasurementTypeAcceleration:
-      // no payload needed, see acc.{x,y,z}
-      eventTrigger(&eventTrigger_estAcceleration);
-      break;
-    case MeasurementTypeBarometer:
-      // no payload needed, see baro.asl
-      eventTrigger(&eventTrigger_estBarometer);
-      break;
-    default:
-      break;
-  }
 }
 
 bool estimatorDequeue(measurement_t *measurement) {
   return pdTRUE == xQueueReceive(measurementsQueue, measurement, 0);
 }
-
-LOG_GROUP_START(estimator)
-  STATS_CNT_RATE_LOG_ADD(rtApnd, &measurementAppendedCounter)
-  STATS_CNT_RATE_LOG_ADD(rtRej, &measurementNotAppendedCounter)
-LOG_GROUP_STOP(estimator)

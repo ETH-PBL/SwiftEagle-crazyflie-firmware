@@ -28,10 +28,9 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include "log.h"
 #include "motors.h"
 #include "power_distribution.h"
-#include "pm.h"
+//#include "pm.h"
 #include "stabilizer.h"
 #include "supervisor.h"
 #include "platform_defaults.h"
@@ -61,7 +60,6 @@ bool supervisorIsTumbled()
   return isTumbled;
 }
 
-//
 // We cannot fly if the Crazyflie is tumbled and we cannot fly if the Crazyflie
 // is connected to a charger.
 //
@@ -70,10 +68,10 @@ static bool canFlyCheck()
   if (isTumbled) {
     return false;
   }
-  return !pmIsChargerConnected();
+  return true;
+  //return !pmIsChargerConnected();
 }
 
-//
 // We say we are flying if the sum of the ratios of all motors giving thrust
 // is above a certain threshold.
 //
@@ -87,7 +85,6 @@ static bool isFlyingCheck()
   return sumRatio > SUPERVISOR_FLIGHT_THRESHOLD;
 }
 
-//
 // We say we are tumbled when the accelerometer reports negative values.
 //
 // Once a tumbled situation is identified, we can use this for instance to cut
@@ -126,21 +123,3 @@ void supervisorUpdate(const sensorData_t *data)
   #endif
   canFly = canFlyCheck();
 }
-
-/**
- *  System loggable variables to check different system states.
- */
-LOG_GROUP_START(sys)
-/**
- * @brief If nonzero if system is ready to fly.
- */
-LOG_ADD_CORE(LOG_UINT8, canfly, &canFly)
-/**
- * @brief Nonzero if the system thinks it is flying
- */
-LOG_ADD_CORE(LOG_UINT8, isFlying, &isFlying)
-/**
- * @brief Nonzero if the system thinks it is tumbled/crashed
- */
-LOG_ADD_CORE(LOG_UINT8, isTumbled, &isTumbled)
-LOG_GROUP_STOP(sys)

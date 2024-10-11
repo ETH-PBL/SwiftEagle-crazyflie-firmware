@@ -29,8 +29,6 @@
 #include "stabilizer_types.h"
 #include "filter.h"
 #include "math3d.h"
-#include "log.h"
-#include "param.h"
 #include "position_controller.h"
 #include "attitude_controller.h"
 #include "position_controller_indi.h"

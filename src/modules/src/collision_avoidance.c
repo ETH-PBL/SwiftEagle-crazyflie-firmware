@@ -263,9 +263,6 @@ void collisionAvoidanceUpdateSetpointCore(
 #include "FreeRTOS.h"
 #include "task.h"
 
-#include "param.h"
-#include "log.h"
-
 
 static uint8_t collisionAvoidanceEnable = 0;
 
@@ -340,11 +337,6 @@ void collisionAvoidanceUpdateSetpoint(
   latency = xTaskGetTickCount() - time;
 }
 
-LOG_GROUP_START(colAv)
-  LOG_ADD(LOG_UINT32, latency, &latency)
-LOG_GROUP_STOP(colAv)
-
-
 /**
  * Onboard collision avoidance algorithm.
  *
@@ -387,44 +379,5 @@ LOG_GROUP_STOP(colAv)
  * vehicles using buffered voronoi cells." IEEE Robotics and Automation
  * Letters 2.2 (2017): 1047-1054.
  */
-PARAM_GROUP_START(colAv)
-
-  /**
-   * @brief Nonzero to enable collision avoidance
-   *
-   * Used to enable or disable the collision avoidance module.
-   */
-  PARAM_ADD_CORE(PARAM_UINT8, enable, &collisionAvoidanceEnable)
-
-  /**
-   * @brief The x radius of the ellipsoid collision volume
-  */
-  PARAM_ADD_CORE(PARAM_FLOAT, ellipsoidX, &params.ellipsoidRadii.x)
-
-  /**
-   * @brief The y radius of the ellipsoid collision volume
-  */
-  PARAM_ADD_CORE(PARAM_FLOAT, ellipsoidY, &params.ellipsoidRadii.y)
-
-  /**
-   * @brief The z radius of the ellipsoid collision volume
-  */
-  PARAM_ADD_CORE(PARAM_FLOAT, ellipsoidZ, &params.ellipsoidRadii.z)
-
-  PARAM_ADD(PARAM_FLOAT, bboxMinX, &params.bboxMin.x)
-  PARAM_ADD(PARAM_FLOAT, bboxMinY, &params.bboxMin.y)
-  PARAM_ADD(PARAM_FLOAT, bboxMinZ, &params.bboxMin.z)
-
-  PARAM_ADD(PARAM_FLOAT, bboxMaxX, &params.bboxMax.x)
-  PARAM_ADD(PARAM_FLOAT, bboxMaxY, &params.bboxMax.y)
-  PARAM_ADD(PARAM_FLOAT, bboxMaxZ, &params.bboxMax.z)
-
-  PARAM_ADD(PARAM_FLOAT, horizon, &params.horizonSecs)
-  PARAM_ADD(PARAM_FLOAT, maxSpeed, &params.maxSpeed)
-  PARAM_ADD(PARAM_FLOAT, sidestepThrsh, &params.sidestepThreshold)
-  PARAM_ADD(PARAM_INT32, maxPeerLocAge, &params.maxPeerLocAgeMillis)
-  PARAM_ADD(PARAM_FLOAT, vorTol, &params.voronoiProjectionTolerance)
-  PARAM_ADD(PARAM_INT32, vorIters, &params.voronoiProjectionMaxIters)
-PARAM_GROUP_STOP(colAv)
 
 #endif  // CRAZYFLIE_FW

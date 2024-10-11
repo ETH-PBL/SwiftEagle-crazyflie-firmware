@@ -54,27 +54,22 @@
 #include "estimator.h"
 #include "kalman_supervisor.h"
 
-#include "stm32f4xx.h"
-
 #include "FreeRTOS.h"
 #include "queue.h"
 #include "task.h"
 #include "semphr.h"
-#include "sensors.h"
+// #include "sensors.h"
 #include "static_mem.h"
-
+#include "config.h"
+#include "xil_printf.h"
 #include "system.h"
-#include "log.h"
-#include "param.h"
+
 #include "physicalConstants.h"
 #include "outlierFilterTdoa.h"
 #include "outlierFilterLighthouse.h"
 #include "usec_time.h"
 
-#include "statsCnt.h"
-
 #define DEBUG_MODULE "ESTKALMANUNSCENTED"
-#include "debug.h"
 
 // Semaphore to signal that we got data from the stabilzer loop to process
 static SemaphoreHandle_t runTaskSemaphore;
@@ -108,15 +103,6 @@ static Axis3f gyroLatest;
 
 // Data used to enable the task and stabilizer loop to run with minimal locking
 static state_t taskEstimatorState; // The estimator state produced by the task, copied to the stabilzer when needed.
-
-// Statistics
-#define ONE_SECOND 1000
-static STATS_CNT_RATE_DEFINE(updateCounter, ONE_SECOND);
-static STATS_CNT_RATE_DEFINE(predictionCounter, ONE_SECOND);
-static STATS_CNT_RATE_DEFINE(baroUpdateCounter, ONE_SECOND);
-static STATS_CNT_RATE_DEFINE(finalizeCounter, ONE_SECOND);
-static STATS_CNT_RATE_DEFINE(measurementAppendedCounter, ONE_SECOND);
-static STATS_CNT_RATE_DEFINE(measurementNotAppendedCounter, ONE_SECOND);
 
 // for error filter version
 #define DIM_FILTER 9
@@ -335,10 +321,9 @@ static void errorUkfTask(void *parameters)
     if (resetNavigation)
     {
       errorEstimatorUkfInit();
-      paramSetInt(paramGetVarId("ukf", "resetEstimation"), 0);
       resetNavigation = false;
 
-      DEBUG_PRINT("Reset UKF\n");
+      xil_printf("Reset UKF\n");
 
       // set bias accumalation counters to zero
       initializedNav = false;
@@ -405,7 +390,6 @@ static void errorUkfTask(void *parameters)
       omega[2] = gyroAverage.z;
 
       lastPrediction = osTick;
-      STATS_CNT_RATE_EVENT(&predictionCounter);
 
       nextPrediction = osTick + S2T(1.0f / PREDICT_RATE);
     } // end if update at the PREDICT_RATE
@@ -414,9 +398,7 @@ static void errorUkfTask(void *parameters)
     transposeMatrix(&dcm[0][0], &dcmTp[0][0]);
 
     //if (initializedNav){
-    if (updateQueuedMeasurements(osTick, &gyroAverage))	{
-      STATS_CNT_RATE_EVENT(&updateCounter);
-    }
+    updateQueuedMeasurements(osTick, &gyroAverage);
     //}
     quatToEuler(&stateNav[6], &eulerOut[0]);
 
@@ -640,7 +622,7 @@ static void navigationInit(void)
     sigmaPointsTempl[ii][(ii+2)] = tmp*((float)ii+1.0f);
   }
 
-  DEBUG_PRINT("Sigma Points chosen\n");
+  xil_printf("Sigma Points chosen\n");
 }
 
 // prediction step of error Kalman Filter
@@ -1524,95 +1506,3 @@ static void quatFromAtt(float *attVec, float *quat)
   quat[2] = scale * attVec[1];
   quat[3] = scale * attVec[2];
 }
-
-
- #ifdef CONFIG_DEBUG
-  /**
-  * Temporary development log groups from the UKF Filter (experimental)
-  */
-LOG_GROUP_START(nav_ukf_states)
-  //LOG_ADD(LOG_FLOAT, ox, &coreData.S[KC_STATE_X])
-  //LOG_ADD(LOG_FLOAT, oy, &coreData.S[KC_STATE_Y])
-  //LOG_ADD(LOG_FLOAT, vx, &coreData.S[KC_STATE_PX])
-  //LOG_ADD(LOG_FLOAT, vy, &coreData.S[KC_STATE_PY])
-LOG_GROUP_STOP(nav_ukf_states)
-#endif
-
- /**
-  * Log groups for the navigation filter associated with the error-state Unscented Kalman Filter (experimental)
-  */
-LOG_GROUP_START(navFilter)
-LOG_ADD(LOG_FLOAT, posX, &stateNav[0])
-LOG_ADD(LOG_FLOAT, posY, &stateNav[1])
-LOG_ADD(LOG_FLOAT, posZ, &stateNav[2])
-LOG_ADD(LOG_FLOAT, accX, &accLog[0])
-LOG_ADD(LOG_FLOAT, accY, &accLog[1])
-LOG_ADD(LOG_FLOAT, accZ, &accLog[2])
-LOG_ADD(LOG_FLOAT, omegaX, &omega[0])
-LOG_ADD(LOG_FLOAT, omegaY, &omega[1])
-LOG_ADD(LOG_FLOAT, omegaZ, &omega[2])
-LOG_ADD(LOG_FLOAT, Phi, &eulerOut[0])
-LOG_ADD(LOG_FLOAT, Theta, &eulerOut[1])
-LOG_ADD(LOG_FLOAT, Psi, &eulerOut[2])
-LOG_ADD(LOG_FLOAT, Px, &PxOut)
-LOG_ADD(LOG_FLOAT, Pvx, &PvxOut)
-LOG_ADD(LOG_FLOAT, Pattx, &PattxOut)
-LOG_ADD(LOG_UINT32, nanCounter, &nanCounterFilter)
-LOG_ADD(LOG_FLOAT, range, &rangeCF)
-LOG_ADD(LOG_FLOAT, procTimeFilter, &procTime)
-LOG_ADD(LOG_UINT8, recAnchorId, &receivedAnchor)
-LOG_GROUP_STOP(navFilter)
-
- /**
-  * Log groups for error-state Unscented Kalman Filter (experimental)
-  */
-LOG_GROUP_START(sensorFilter)
-LOG_ADD(LOG_FLOAT, dxPx, &meas_NX)
-LOG_ADD(LOG_FLOAT, dyPx, &meas_NY)
-LOG_ADD(LOG_FLOAT, dxPxPred, &pred_NX)
-LOG_ADD(LOG_FLOAT, dyPxPred, &pred_NY)
-LOG_ADD(LOG_FLOAT, distPred, &predDist)
-LOG_ADD(LOG_FLOAT, distMeas, &measDist)
-LOG_ADD(LOG_FLOAT, baroHeight, &baroOut)
-LOG_ADD(LOG_FLOAT, innoChFlow_x, &innoCheckFlow_x)
-LOG_ADD(LOG_FLOAT, innoChFlow_y, &innoCheckFlow_y)
-LOG_ADD(LOG_FLOAT, innoChTof, &innoCheckTof)
-LOG_ADD(LOG_FLOAT, distTWR, &distanceTWR)
-LOG_GROUP_STOP(sensorFilter)
-
- /**
-  * Log groups different rates for the UKF (experimental)
-  */
-LOG_GROUP_START(ukf)
-STATS_CNT_RATE_LOG_ADD(rtUpdate, &updateCounter)
-STATS_CNT_RATE_LOG_ADD(rtPred, &predictionCounter)
-STATS_CNT_RATE_LOG_ADD(rtBaro, &baroUpdateCounter)
-STATS_CNT_RATE_LOG_ADD(rtFinal, &finalizeCounter)
-STATS_CNT_RATE_LOG_ADD(rtApnd, &measurementAppendedCounter)
-STATS_CNT_RATE_LOG_ADD(rtRej, &measurementNotAppendedCounter)
-LOG_GROUP_STOP(ukf)
-
- /**
-  * Parameter values used for tuning the Unscented Kalman Filter (experimental)
-  */
-PARAM_GROUP_START(ukf)
-PARAM_ADD(PARAM_UINT8, resetEstimation, &resetNavigation)
-PARAM_ADD(PARAM_UINT8, useNavFilter, &useNavigationFilter)
-PARAM_ADD(PARAM_FLOAT, sigmaInitPos_xy, &stdDevInitialPosition_xy)
-PARAM_ADD(PARAM_FLOAT, sigmaInitPos_z, &stdDevInitialPosition_z)
-PARAM_ADD(PARAM_FLOAT, sigmaInitVel, &stdDevInitialVelocity)
-PARAM_ADD(PARAM_FLOAT, sigmaInitAtt, &stdDevInitialAtt)
-PARAM_ADD(PARAM_FLOAT, procNoiseA_h, &procA_h)
-PARAM_ADD(PARAM_FLOAT, procNoiseA_z, &procA_z)
-PARAM_ADD(PARAM_FLOAT, procNoiseVel_h, &procVel_h)
-PARAM_ADD(PARAM_FLOAT, procNoiseVel_z, &procVel_z)
-PARAM_ADD(PARAM_FLOAT, procNoiseRate_h, &procRate_h)
-PARAM_ADD(PARAM_FLOAT, procNoiseRate_z, &procRate_z)
-PARAM_ADD(PARAM_FLOAT, baroNoise, &measNoiseBaro)
-PARAM_ADD(PARAM_FLOAT, qualityGateTof, &qualGateTof)
-PARAM_ADD(PARAM_FLOAT, qualityGateFlow, &qualGateFlow)
-PARAM_ADD(PARAM_FLOAT, qualityGateTdoa, &qualGateTdoa)
-PARAM_ADD(PARAM_FLOAT, qualityGateBaro, &qualGateBaro)
-PARAM_ADD(PARAM_FLOAT, qualityGateSweep, &qualGateSweep)
-PARAM_ADD(PARAM_FLOAT, ukfw0, &weight0)
-PARAM_GROUP_STOP(ukf)

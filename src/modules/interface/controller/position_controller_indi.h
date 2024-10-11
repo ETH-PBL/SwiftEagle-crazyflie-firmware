@@ -38,9 +38,6 @@
 #include "stabilizer_types.h"
 #include "filter.h"
 #include "math3d.h"
-#include "log.h"
-#include "param.h"
-
 struct Vectr {
   float x; 
   float y; 

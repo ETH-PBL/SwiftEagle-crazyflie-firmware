@@ -24,13 +24,9 @@
  * position_estimator_altitude.c: Altitude-only position estimator
  */
 
-#include "stm32f4xx.h"
-
 #include "FreeRTOS.h"
 #include "task.h"
 
-#include "log.h"
-#include "param.h"
 #include "num.h"
 #include "position_estimator.h"
 
@@ -120,35 +116,3 @@ static void positionUpdateVelocityInternal(float accWZ, float dt, struct selfSta
   state->velocityZ += deadband(accWZ, state->vAccDeadband) * dt * G;
   state->velocityZ *= state->velZAlpha;
 }
-
-LOG_GROUP_START(posEstAlt)
-LOG_ADD(LOG_FLOAT, estimatedZ, &state.estimatedZ)
-LOG_ADD(LOG_FLOAT, estVZ, &state.estimatedVZ)
-LOG_ADD(LOG_FLOAT, velocityZ, &state.velocityZ)
-LOG_GROUP_STOP(posEstAlt)
-
-/**
- * Tuning setttings for the altitude estimator/filtering
- */
-PARAM_GROUP_START(posEstAlt)
-/**
- * @brief parameter alpha IIR Filter above sea level/true altitude (baro)
- */
-PARAM_ADD_CORE(PARAM_FLOAT | PARAM_PERSISTENT, estAlphaAsl, &state.estAlphaAsl)
-/**
- * @brief parameter alpha IIR Filter Height  (zranger)
- */
-PARAM_ADD_CORE(PARAM_FLOAT | PARAM_PERSISTENT, estAlphaZr, &state.estAlphaZrange)
-/**
- * @brief Multiplying factor for adding velocity
- */
-PARAM_ADD(PARAM_FLOAT | PARAM_PERSISTENT, velFactor, &state.velocityFactor)
-/**
- * @brief Blendning factor to avoid accumulate error
- */
-PARAM_ADD(PARAM_FLOAT | PARAM_PERSISTENT, velZAlpha, &state.velZAlpha)
-/**
- * @brief Vertical acceleration deadband
- */
-PARAM_ADD_CORE(PARAM_FLOAT | PARAM_PERSISTENT, vAccDeadband, &state.vAccDeadband)
-PARAM_GROUP_STOP(posEstAlt)

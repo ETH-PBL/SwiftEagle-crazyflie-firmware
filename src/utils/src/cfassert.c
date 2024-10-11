@@ -29,9 +29,16 @@
 #include <stdint.h>
 #include "FreeRTOS.h"
 #include "cfassert.h"
-#include "led.h"
-#include "motors.h"
-#include "debug.h"
+// #include "motors.h"
+#include "xil_printf.h"
+#include "xil_io.h"
+#include "xresetps.h"
+
+#define CORESIGHT_RPU_ROM_DSCRext_ADDR 0xFEBF0088
+#define CORESIGHT_RPU_ROM_DSCRext_HDBGEN_MSK 0x4000
+
+XResetPs ResetInstance;	
+
 
 #define MAGIC_ASSERT_INDICATOR 0x2f8a001f
 
@@ -81,15 +88,22 @@ void assertFail(char *exp, char *file, int line)
 {
   portDISABLE_INTERRUPTS();
   storeAssertFileData(file, line);
-  DEBUG_PRINT("Assert failed %s:%d\n", file, line);
+  xil_printf("Assert failed %s:%d\r\n", file, line);
 
-  motorsStop();
-  ledShowFaultPattern();
+  // motorsStop();
 
-  if(!(CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk))
+  u32 dscr = Xil_In32(CORESIGHT_RPU_ROM_DSCRext_ADDR);
+  if(!(dscr & CORESIGHT_RPU_ROM_DSCRext_HDBGEN_MSK))
   {
     // Only reset if debugger is not connected
-    NVIC_SystemReset();
+    int status;
+    XResetPs_Config *configPtr;
+    configPtr = XResetPs_LookupConfig(XPAR_XRESETPS_DEVICE_ID);
+    status = XResetPs_CfgInitialize(&ResetInstance, configPtr);
+    if (status != XST_SUCCESS) {
+      xil_printf("ResetPs configuration failed\r\n");
+    }
+    // XResetPs_ResetPulse(&ResetInstance, XRESETPS_RSTID_RPU_LS);
   }
 }
 
@@ -141,13 +155,13 @@ void printAssertSnapshotData()
 {
   switch (currentType) {
     case SnapshotTypeNone:
-      DEBUG_PRINT("No assert information found\n");
+      xil_printf("No assert information found\r\n");
       break;
     case SnapshotTypeFile:
-      DEBUG_PRINT("Assert failed at %s:%d\n", snapshot.file.fileName, snapshot.file.line);
+      xil_printf("Assert failed at %s:%d\r\n", snapshot.file.fileName, snapshot.file.line);
       break;
     case SnapshotTypeHardFault:
-      DEBUG_PRINT("Hardfault. r0: %X, r1: %X, r2: %X, r3: %X, r12: %X, lr: %X, pc: %X, psr: %X\n",
+      xil_printf("Hardfault. r0: %X, r1: %X, r2: %X, r3: %X, r12: %X, lr: %X, pc: %X, psr: %X\r\n",
         snapshot.hardfault.r0,
         snapshot.hardfault.r1,
         snapshot.hardfault.r2,
@@ -158,10 +172,10 @@ void printAssertSnapshotData()
         snapshot.hardfault.psr);
       break;
     case SnapshotTypeText:
-      DEBUG_PRINT("Assert failed: %s\n", snapshot.text.text);
+      xil_printf("Assert failed: %s\r\n", snapshot.text.text);
       break;
     default:
-      DEBUG_PRINT("Assert failed, but unknown type\n");
+      xil_printf("Assert failed, but unknown type\r\n");
       break;
   }
 }
@@ -176,7 +190,7 @@ bool cfAssertNormalStartTest(void) {
 	if (isAssertRegistered()) {
 		wasNormalStart = false;
     currentType = snapshot.type;
-		DEBUG_PRINT("The system resumed after a failed assert [WARNING]\n");
+		xil_printf("The system resumed after a failed assert [WARNING]\r\n");
     clearAssertData();
 		printAssertSnapshotData();
 	}

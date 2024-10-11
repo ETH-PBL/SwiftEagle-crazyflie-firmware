@@ -33,8 +33,6 @@
 #include "queuemonitor.h"
 #include "static_mem.h"
 
-#include "console.h"
-
 #define WORKER_QUEUE_LENGTH 5
 
 struct worker_work {
